@@ -11,7 +11,7 @@ Siga os passos abaixo para clonar o repositório, instalar as dependências e ex
 Abra o terminal (ou PowerShell) e execute:
 
     git clone https://github.com/JoelAntonioDev/editor-audio-python.git
-    cd PythonProject
+    cd editor-audio-python
 
 ### 🔹 2. Criar e ativar um ambiente virtual (recomendado)
 
