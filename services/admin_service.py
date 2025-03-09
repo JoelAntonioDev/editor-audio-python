@@ -6,7 +6,7 @@ from database import conectar
 class AdminService:
     @staticmethod
     def listar_usuarios(token):
-        # Verifica se o token é válido e se o usuário é admin
+        # Verificar se o token é válido e se o usuário é admin
         auth_response = AuthService.verificar_token(token)
         if auth_response["status"] == "erro":
             return {"status": "erro", "message": "Acesso negado"}
@@ -32,7 +32,7 @@ class AdminService:
 
     @staticmethod
     def listar_historico(token):
-        # Verifica se o token é válido e se o usuário é admin
+        # Verificar se o token é válido e se o usuário é admin
         auth_response = AuthService.verificar_token(token)
         if auth_response["status"] == "erro":
             return {"status": "erro", "message": "Acesso negado"}
@@ -64,3 +64,4 @@ class AdminService:
 
         except Exception as e:
             return {"status": "erro", "message": str(e)}
+
