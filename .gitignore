@@ -1,0 +1,39 @@
+# Ambiente virtual
+.venv*/
+venv/
+
+# Arquivos do PyCharm
+.idea/
+
+# Compilados Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logs e arquivos temporários
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Configurações do sistema
+.DS_Store
+Thumbs.db
+
+
+# Arquivos de saída e cache do projeto
+uploads/
+zips/
+
+# Arquivos de pacotes do Python
+*.egg-info/
+dist/
+build/
+
+# Arquivo de dependências
+pip-log.txt
+
+# Outros arquivos desnecessários
+*.bak
+*.orig
