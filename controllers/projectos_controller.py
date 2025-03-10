@@ -65,6 +65,12 @@ class ProjectosController:
         return ProjectosService.obter_projecto(token, project_id)
 
     @staticmethod
+    def excluir_projeto(environ, project_id):
+        """Exclui um projeto e seus áudios associados"""
+        token = ProjectosController._get_token(environ)
+        return ProjectosService.excluir_projeto(token, project_id)
+
+    @staticmethod
     def retroceder_edicao(environ, project_id, file_name):
         token = ProjectosController._get_token(environ)
 

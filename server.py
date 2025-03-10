@@ -192,6 +192,18 @@ def application(environ, start_response):
             start_response('400 Bad Request', cors_headers + [('Content-Type', 'application/json')])
             return [json.dumps({"status": "erro", "message": "ID do projeto inválido"}).encode("utf-8")]
 
+    if path.startswith('api/projectos/') and method == 'DELETE':
+        try:
+            project_id = int(path.split('/')[-1])
+            response_body = ProjectosController.excluir_projeto(environ, project_id)
+            status_code = '200 OK' if response_body.get("status") == "sucesso" else '400 Bad Request'
+            headers = cors_headers + [('Content-Type', 'application/json')]
+            start_response(status_code, headers)
+            return [json.dumps(response_body).encode("utf-8")]
+        except ValueError:
+            start_response('400 Bad Request', cors_headers + [('Content-Type', 'application/json')])
+            return [json.dumps({"status": "erro", "message": "ID do projeto inválido"}).encode("utf-8")]
+
     if path == "api/upload-audio" and method == "POST":
         response_body = ProjectosController.upload_audio(environ)
         status_code = "201 Created" if response_body.get("status") == "sucesso" else "400 Bad Request"

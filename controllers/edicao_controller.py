@@ -64,6 +64,7 @@ class EdicaoAudioController:
         except Exception as e:
             return {"status": "erro", "message": str(e)}, 500
 
+
     @staticmethod
     def alongar_audio(environ):
         try:

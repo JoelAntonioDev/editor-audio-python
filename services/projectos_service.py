@@ -11,44 +11,6 @@ import zipfile
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-
-def obter_dados_do_projeto(project_id):
-    """Obtém os dados do projeto e o arquivo de áudio associado"""
-    try:
-        conn = conectar()
-        cursor = conn.cursor(dictionary=True)
-
-        cursor.execute("""
-            SELECT af.file_name, af.file_path
-            FROM projectos p
-            LEFT JOIN projectos_audio_files paf ON p.id = paf.project_id
-            LEFT JOIN audio_files af ON paf.audio_id = af.id
-            WHERE p.id = %s
-        """, (project_id,))  # 🔥 Corrigido: Project_id precisa estar dentro de uma tupla!
-
-        projecto = cursor.fetchone()
-
-        cursor.close()
-        conn.close()
-        print(projecto)
-        if projecto:
-            return {
-                "arquivo_audio": projecto["file_path"]  # 🔥 Retorna o caminho do arquivo corretamente
-            }
-        else:
-            return None
-
-    except Exception as e:
-        print(f"Erro ao obter dados do projeto: {e}")
-        return None
-
-def extrair_timestamp(file_name):
-    partes = file_name.split("_")
-    try:
-        return int(partes[0]) if partes[0].isdigit() else 0  # Pega o timestamp, se existir
-    except ValueError:
-        return 0  # Retorna 0 se não houver timestamp
-
 class ProjectosService:
     @staticmethod
     def listar_projectos(token):
@@ -231,11 +193,69 @@ class ProjectosService:
             return {"status": "erro", "message": str(e)}
 
     @staticmethod
+    def excluir_projeto(token, project_id):
+        """Exclui um projeto e seus áudios associados"""
+        auth_response = AuthService.verificar_token(token)
+        if auth_response["status"] == "erro":
+            return {"status": "erro", "message": "Acesso negado"}
+
+        user_id = auth_response["user_id"]
+
+        try:
+            conn = conectar()
+            cursor = conn.cursor(dictionary=True)
+
+            # 🔹 Verificar se o projeto pertence ao usuário
+            cursor.execute("SELECT id FROM projectos WHERE id = %s AND user_id = %s", (project_id, user_id))
+            projeto = cursor.fetchone()
+
+            if not projeto:
+                return {"status": "erro", "message": "Projeto não encontrado ou não pertence ao usuário"}
+
+            # 🔥 Buscar IDs e caminhos dos áudios associados
+            cursor.execute("""
+                SELECT af.id, af.file_path FROM audio_files af
+                JOIN projectos_audio_files paf ON af.id = paf.audio_id
+                WHERE paf.project_id = %s
+            """, (project_id,))
+
+            arquivos = cursor.fetchall()
+
+            # 🔥 Remover os arquivos do sistema
+            for arquivo in arquivos:
+                file_path = arquivo["file_path"]
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+
+            # 🔥 Obter IDs dos arquivos de áudio para exclusão
+            audio_ids = [arquivo["id"] for arquivo in arquivos]
+
+            # 🔥 Excluir registros de relacionamento antes dos arquivos de áudio
+            cursor.execute("DELETE FROM projectos_audio_files WHERE project_id = %s", (project_id,))
+
+            # 🔥 Excluir os arquivos de áudio apenas se existirem
+            if audio_ids:
+                cursor.execute("DELETE FROM audio_files WHERE id IN (%s)" % ",".join(map(str, audio_ids)))
+
+            # 🔥 Excluir o projeto
+            cursor.execute("DELETE FROM projectos WHERE id = %s", (project_id,))
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            HistoricoService.registrar_atividade(user_id, project_id, "delete", "Projeto excluído")
+
+            return {"status": "sucesso", "message": "Projeto excluído com sucesso"}
+
+        except Exception as e:
+            return {"status": "erro", "message": str(e)}
+
+    @staticmethod
     def normalizar_nome(nome):
         nome = unicodedata.normalize('NFKD', nome).encode('ASCII', 'ignore').decode('utf-8')
         nome = nome.replace(" ", "_")  # Substituir espaços por _
         return nome
-
 
     #Adicionar audio ao projecto
     @staticmethod
