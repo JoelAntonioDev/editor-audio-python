@@ -111,7 +111,7 @@ class EdicaoAudioController:
             file_name = data.get("file_name")
             start_time = float(data.get("start_time", 0))
             end_time = float(data.get("end_time", 0))
-
+            print(user_id, project_id, file_name, start_time, end_time)
             return EdicaoAudioService.encurtar_audio(project_id, file_name, start_time, end_time,user_id)
 
         except json.JSONDecodeError:
