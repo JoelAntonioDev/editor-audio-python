@@ -34,13 +34,14 @@ def criar_tabelas():
     # SQL para criar as tabelas
     tabelas = [
         """
-        CREATE TABLE IF NOT EXISTS audio_files (
+              CREATE TABLE IF NOT EXISTS audio_files (
             id BIGINT NOT NULL AUTO_INCREMENT,
-            file_name TEXT NOT NULL,
+            file_name VARCHAR(255) NOT NULL,
             file_path TEXT NOT NULL,
             duration DECIMAL(10,2) NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id)
+            PRIMARY KEY (id),
+            UNIQUE KEY unique_file_name (file_name)  -- 🔹 Coloque o UNIQUE aqui
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
         """,
         """
