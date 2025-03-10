@@ -260,6 +260,13 @@ def application(environ, start_response):
         start_response(status_code, headers)
         return [json.dumps(response_body).encode("utf-8")]
 
+    if path == "api/editar/aplicar-efeito" and method == "POST":
+        response_body = EdicaoAudioController.aplicar_efeito(environ)
+        status_code = "200 OK" if response_body.get("status") == "sucesso" else "400 Bad Request"
+        headers = cors_headers + [("Content-Type", "application/json")]
+        start_response(status_code, headers)
+        return [json.dumps(response_body).encode("utf-8")]
+
     if path == "api/audio/excluir" and method == "DELETE":
         response_body = EdicaoAudioController.excluir_audio(environ)
         status_code = "200 OK" if response_body.get("status") == "sucesso" else "400 Bad Request"

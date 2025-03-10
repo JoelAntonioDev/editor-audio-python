@@ -271,6 +271,67 @@ class EdicaoAudioService:
         return {"status": "sucesso", "file_name": novo_arquivo, "file_path": novo_path}
 
     @staticmethod
+    def aplicar_efeito(project_id, file_name, efeito, user_id):
+        """Aplica um efeito de áudio, como reverb"""
+
+        conn = conectar()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT file_path FROM audio_files 
+            JOIN projectos_audio_files ON audio_files.id = projectos_audio_files.audio_id 
+            WHERE projectos_audio_files.project_id = %s AND audio_files.file_name = %s
+        """, (project_id, file_name))
+
+        result = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if not result:
+            return {"status": "erro", "message": "Arquivo não encontrado para este projeto."}
+
+        file_path = result[0]
+
+        # Ajustar caminho
+        file_path = re.sub(r'^https?://localhost:\d+/', '', file_path)
+        if not file_path.startswith(UPLOAD_DIR):
+            file_path = os.path.join(UPLOAD_DIR, file_path.lstrip("/"))
+
+        if not os.path.exists(file_path):
+            return {"status": "erro", "message": "Arquivo de áudio não encontrado."}
+
+        # Criar novo nome do arquivo com timestamp
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        file_base, file_ext = os.path.splitext(file_name)
+        file_base = re.sub(r'^\d{14}_', '', file_base)  # Remover timestamp antigo
+        novo_arquivo = f"{timestamp}_{file_base}{file_ext}"
+        novo_path = os.path.join(UPLOAD_DIR, novo_arquivo)
+
+        # 🔥 Aplicar efeito de Reverb
+        (
+            ffmpeg
+            .input(file_path)
+            .filter("aecho", 0.8, 0.88, 60, 0.4)  # Efeito Reverb
+            .output(novo_path, format="mp3")
+            .run(overwrite_output=True)
+        )
+
+        # Obter duração do novo áudio
+        duracao_novo = EdicaoAudioService.obter_duracao_audio(novo_path)
+
+        # Salvar no banco de dados
+        novo_audio_id = EdicaoAudioService.salvar_audio_no_banco(novo_arquivo, novo_path, duracao_novo)
+
+        # Associar ao projeto
+        EdicaoAudioService.associar_audio_ao_projeto(project_id, novo_audio_id)
+
+        # Registrar no histórico de atividades
+        HistoricoService.registrar_atividade(user_id, project_id, "edição",
+                                             f"Aplicou efeito {efeito} no arquivo {file_name}")
+
+        return {"status": "sucesso", "file_name": novo_arquivo, "file_path": novo_path}
+
+    @staticmethod
     def salvar_audio_no_banco(file_name, file_path, duration):
         """ Insere o novo áudio na tabela audio_files e retorna o ID gerado """
         try:
