@@ -10,10 +10,10 @@
   <component name="ChangeListManager">
     <list default="true" id="2fefd390-2b5c-4f31-832d-4d836ee4b71a" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/controllers/auth_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/controllers/auth_controller.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/controllers/edicao_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/controllers/edicao_controller.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/controllers/projectos_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/controllers/projectos_controller.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/server.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/projectos_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/projectos_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/edicao_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/edicao_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/login_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/login_service.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -164,7 +164,7 @@
       <workItem from="1741452671319" duration="92000" />
       <workItem from="1741452787713" duration="14316000" />
       <workItem from="1741471541461" duration="2824000" />
-      <workItem from="1741544738534" duration="19997000" />
+      <workItem from="1741544738534" duration="25172000" />
     </task>
     <servers />
   </component>

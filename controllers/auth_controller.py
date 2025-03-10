@@ -1,6 +1,8 @@
 from services.auth_service import AuthService
+from services.historico_service import HistoricoService
 from services.login_service import LoginService
 from services.session_service import SessionService
+import json
 class AuthController:
 
     @staticmethod
@@ -15,14 +17,15 @@ class AuthController:
 
             if response_data["status"] == "erro":
                 return {"status": "erro", "message": response_data["message"]}
-
+            data = json.loads(body)
+            email = data.get('email')
             user_id = response_data["user_id"]
             token = response_data["token"]
             # Obter endereço IP do usuário
             ip_address = environ.get('REMOTE_ADDR')
 
-            LoginService.registrar_login(user_id, ip_address)
-            session_response = SessionService.iniciar_sessao(user_id, token, ip_address)
+            descricao = f"Usuário {email} fez login a partir do IP {ip_address}."
+            HistoricoService.registrar_atividade(user_id, None, "login", descricao)
 
             return response_data
 

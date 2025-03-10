@@ -5,6 +5,7 @@ import database
 import ffmpeg
 from datetime import datetime
 from database import conectar
+from services.historico_service import HistoricoService
 from services.projectos_service import ProjectosService
 
 UPLOAD_DIR = "uploads"
@@ -12,7 +13,7 @@ BASE_URL = "http://localhost:8000/"
 
 class EdicaoAudioService:
     @staticmethod
-    def recortar_audio(project_id, file_name, inicio, fim):
+    def recortar_audio(project_id, file_name, inicio, fim, user_id):
         """Realiza o recorte do áudio e salva no banco de dados"""
 
         # Conectar ao banco para verificar se o arquivo existe no projeto
@@ -58,7 +59,7 @@ class EdicaoAudioService:
 
         # Associar ao projeto
         EdicaoAudioService.associar_audio_ao_projeto(project_id, novo_audio_id)
-
+        HistoricoService.registrar_atividade(user_id, project_id, "edição", f"Recortou {file_name} com start_time {inicio} e end_time {fim}")
         return {"status": "sucesso", "file_name": novo_arquivo, "file_path": novo_path}
 
     @staticmethod
@@ -112,11 +113,11 @@ class EdicaoAudioService:
 
         # Associar ao projeto
         EdicaoAudioService.associar_audio_ao_projeto(project_id, audio_id)
-
+        HistoricoService.registrar_atividade(user_id, project_id, "edição", f"Mesclou {file1_name} com {file2_name}")
         return {"status": "sucesso", "file_name": novo_arquivo, "file_path": file_url}
 
     @staticmethod
-    def alongar_audio(project_id, file_name, start_time, end_time):
+    def alongar_audio(project_id, file_name, start_time, end_time,user_id):
         """Duplica um trecho do áudio entre `start_time` e `end_time`, alongando a duração total"""
 
         if not project_id or not file_name or start_time < 0 or end_time <= start_time:
@@ -177,11 +178,11 @@ class EdicaoAudioService:
 
         # Associar ao projeto
         EdicaoAudioService.associar_audio_ao_projeto(project_id, novo_audio_id)
-
+        HistoricoService.registrar_atividade(user_id, project_id, "edição", f"Alongou {file_name} com start-time {start_time} e end-time {end_time}")
         return {"status": "sucesso", "file_name": novo_arquivo, "file_path": novo_path}
 
     @staticmethod
-    def encurtar_audio(project_id, file_name, start_time, end_time):
+    def encurtar_audio(project_id, file_name, start_time, end_time, user_id):
         """Remove um trecho de áudio entre `start_time` e `end_time`, reduzindo a duração total"""
 
         if not project_id or not file_name or start_time < 0 or end_time <= start_time:
@@ -266,7 +267,7 @@ class EdicaoAudioService:
 
         # Associar ao projeto
         EdicaoAudioService.associar_audio_ao_projeto(project_id, novo_audio_id)
-
+        HistoricoService.registrar_atividade(user_id, project_id, "edição", f"Encurtou {file_name} com start-time {start_time} e end-time {end_time}")
         return {"status": "sucesso", "file_name": novo_arquivo, "file_path": novo_path}
 
     @staticmethod
@@ -317,11 +318,8 @@ class EdicaoAudioService:
             return 0.0
 
     @staticmethod
-    def excluir_audio(project_id, file_name):
-        """Exclui um arquivo de áudio do sistema e do banco de dados."""
-
-        if not project_id or not file_name:
-            return {"status": "erro", "message": "project_id e file_name são obrigatórios."}
+    def excluir_audio(project_id, file_name, user_id):
+        """Exclui um arquivo de áudio do sistema e do banco de dados"""
 
         # Conectar ao banco de dados
         conn = conectar()
@@ -329,10 +327,10 @@ class EdicaoAudioService:
 
         # Verificar se o arquivo pertence ao projeto
         cursor.execute("""
-                SELECT audio_files.id, audio_files.file_path FROM audio_files 
-                JOIN projectos_audio_files ON audio_files.id = projectos_audio_files.audio_id 
-                WHERE projectos_audio_files.project_id = %s AND audio_files.file_name = %s
-            """, (project_id, file_name))
+                    SELECT audio_files.id, audio_files.file_path FROM audio_files 
+                    JOIN projectos_audio_files ON audio_files.id = projectos_audio_files.audio_id 
+                    WHERE projectos_audio_files.project_id = %s AND audio_files.file_name = %s
+                """, (project_id, file_name))
 
         result = cursor.fetchone()
 
@@ -351,6 +349,7 @@ class EdicaoAudioService:
         # Excluir o arquivo do sistema
         if os.path.exists(file_path):
             os.remove(file_path)
+            print(f"🔹 Arquivo {file_name} removido do sistema.")
 
         # Remover do banco de dados
         cursor.execute("DELETE FROM projectos_audio_files WHERE audio_id = %s", (audio_id,))
@@ -359,5 +358,8 @@ class EdicaoAudioService:
 
         cursor.close()
         conn.close()
+
+        # Registrar a exclusão no histórico
+        HistoricoService.registrar_atividade(user_id, project_id, "exclusão", f"Arquivo {file_name} excluído")
 
         return {"status": "sucesso", "message": f"Arquivo {file_name} excluído com sucesso."}
